@@ -1,0 +1,200 @@
+{
+  "entities": {
+    "userProfile": {
+      "title": "UserProfile",
+      "description": "User profile identifying the outreach workspace owner",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 254 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email", "createdAt", "updatedAt"]
+    },
+    "appSettings": {
+      "title": "AppSettings",
+      "description": "Workspace settings such as signature, timezone and base URL",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "appUrl": { "type": "string", "maxLength": 512 },
+        "timezone": { "type": "string", "maxLength": 64 },
+        "signature": { "type": "string", "maxLength": 2048 },
+        "firstCampaignApprovedAt": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "timezone", "signature", "updatedAt"]
+    },
+    "sendingAccount": {
+      "title": "SendingAccount",
+      "description": "Connected Gmail or Google Workspace sender configuration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 254 },
+        "fromName": { "type": "string", "maxLength": 128 },
+        "secretName": { "type": "string", "maxLength": 128 },
+        "dailyLimit": { "type": "number" },
+        "sentToday": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "paused", "error", "rate_limited"] },
+        "lastError": { "type": "string", "maxLength": 1024 },
+        "lastCheckedAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "email", "dailyLimit", "status", "createdAt", "updatedAt"]
+    },
+    "lead": {
+      "title": "Lead",
+      "description": "A prospect lead record with contact attributes and outreach status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 254 },
+        "firstName": { "type": "string", "maxLength": 128 },
+        "lastName": { "type": "string", "maxLength": 128 },
+        "company": { "type": "string", "maxLength": 128 },
+        "designation": { "type": "string", "maxLength": 128 },
+        "industry": { "type": "string", "maxLength": 128 },
+        "source": { "type": "string", "enum": ["manual", "import"] },
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_contacted",
+            "email_sent",
+            "delivered",
+            "replied",
+            "interested",
+            "meeting_requested",
+            "follow_up_required",
+            "not_interested",
+            "unsubscribed",
+            "bounced"
+          ]
+        },
+        "unsubscribeToken": { "type": "string", "maxLength": 128 },
+        "lastContactedAt": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "email", "status", "createdAt", "updatedAt"]
+    },
+    "suppression": {
+      "title": "Suppression",
+      "description": "Suppressed emails to prevent any outreach contact",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 254 },
+        "reason": { "type": "string", "enum": ["unsubscribe", "bounce", "manual", "complaint"] },
+        "note": { "type": "string", "maxLength": 512 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "email", "reason", "createdAt"]
+    },
+    "campaign": {
+      "title": "Campaign",
+      "description": "Outreach campaign sequence and copy definition",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 256 },
+        "subject": { "type": "string", "maxLength": 512 },
+        "body": { "type": "string", "maxLength": 8192 },
+        "status": { "type": "string", "enum": ["draft", "active", "paused", "completed"] },
+        "accountIds": { "type": "array" },
+        "dailyLimit": { "type": "number" },
+        "batchSize": { "type": "number" },
+        "approvedAt": { "type": "string" },
+        "startedAt": { "type": "string" },
+        "completedAt": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "name", "subject", "body", "status", "dailyLimit", "batchSize", "createdAt", "updatedAt"]
+    },
+    "campaignLead": {
+      "title": "CampaignLead",
+      "description": "Enrolment linking a lead to a campaign and tracking batch status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "campaignId": { "type": "string", "maxLength": 128 },
+        "leadId": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "enum": ["queued", "sending", "sent", "failed", "skipped"] },
+        "sendingAccountId": { "type": "string", "maxLength": 128 },
+        "error": { "type": "string", "maxLength": 1024 },
+        "sentAt": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "campaignId", "leadId", "status", "createdAt", "updatedAt"]
+    },
+    "emailMessage": {
+      "title": "EmailMessage",
+      "description": "Log of every outbound and inbound outreach email",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "leadId": { "type": "string", "maxLength": 128 },
+        "campaignId": { "type": "string", "maxLength": 128 },
+        "campaignLeadId": { "type": "string", "maxLength": 128 },
+        "step": { "type": "number" },
+        "direction": { "type": "string", "enum": ["outbound", "inbound"] },
+        "isTest": { "type": "boolean" },
+        "sendingAccountId": { "type": "string", "maxLength": 128 },
+        "toEmail": { "type": "string", "maxLength": 254 },
+        "fromEmail": { "type": "string", "maxLength": 254 },
+        "subject": { "type": "string", "maxLength": 512 },
+        "body": { "type": "string", "maxLength": 8192 },
+        "status": { "type": "string", "enum": ["pending", "sent", "failed", "bounced", "received"] },
+        "error": { "type": "string", "maxLength": 1024 },
+        "sentAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "leadId", "direction", "isTest", "toEmail", "fromEmail", "subject", "body", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "userProfile",
+      "description": "Authenticated user profile"
+    },
+    "/settings/{ownerId}": {
+      "schema": "appSettings",
+      "description": "Per-user workspace configuration"
+    },
+    "/accounts/{accountId}": {
+      "schema": "sendingAccount",
+      "description": "Sending accounts with daily limit metrics"
+    },
+    "/leads/{leadId}": {
+      "schema": "lead",
+      "description": "Prospects directory records"
+    },
+    "/suppressions/{suppressionId}": {
+      "schema": "suppression",
+      "description": "Suppressed emails list"
+    },
+    "/campaigns/{campaignId}": {
+      "schema": "campaign",
+      "description": "Outreach sequences"
+    },
+    "/campaign_leads/{campaignLeadId}": {
+      "schema": "campaignLead",
+      "description": "Enrolled campaign recipient statuses"
+    },
+    "/email_messages/{messageId}": {
+      "schema": "emailMessage",
+      "description": "Outbound and inbound email communication history"
+    }
+  }
+}

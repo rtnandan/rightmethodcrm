@@ -1,0 +1,7 @@
+{
+  "name": "DECILE Outreach",
+  "description": "Personalised email campaigns, lead manager, safe daily batch sender and deliverability desk.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

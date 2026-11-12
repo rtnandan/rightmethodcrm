@@ -1,0 +1,151 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny-all catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && (request.auth.token.email_verified == true || request.auth.token.firebase.sign_in_provider == 'google.com');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create, update: if isOwner(userId)
+        && incoming().keys().hasAll(['id', 'email', 'createdAt', 'updatedAt'])
+        && incoming().id == userId
+        && incoming().email is string && incoming().email.size() <= 254;
+      allow delete: if isOwner(userId);
+    }
+
+    // Settings Collection
+    match /settings/{ownerId} {
+      allow get: if isOwner(ownerId);
+      allow create, update: if isOwner(ownerId)
+        && incoming().ownerId == ownerId
+        && incoming().timezone is string && incoming().timezone.size() <= 64
+        && incoming().signature is string && incoming().signature.size() <= 2048;
+      allow delete: if isOwner(ownerId);
+    }
+
+    // Accounts Collection
+    match /accounts/{accountId} {
+      allow get: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerified()
+        && isValidId(accountId)
+        && incoming().ownerId == request.auth.uid
+        && incoming().email is string && incoming().email.size() <= 254
+        && incoming().dailyLimit is number && incoming().dailyLimit >= 1 && incoming().dailyLimit <= 2000;
+      allow update: if isVerified()
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId
+        && incoming().email is string && incoming().email.size() <= 254
+        && incoming().dailyLimit is number && incoming().dailyLimit >= 1 && incoming().dailyLimit <= 2000;
+      allow delete: if isSignedIn() && existing().ownerId == request.auth.uid;
+    }
+
+    // Leads Collection
+    match /leads/{leadId} {
+      allow get: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerified()
+        && isValidId(leadId)
+        && incoming().ownerId == request.auth.uid
+        && incoming().email is string && incoming().email.size() <= 254;
+      allow update: if isVerified()
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId
+        && incoming().email is string && incoming().email.size() <= 254;
+      allow delete: if isSignedIn() && existing().ownerId == request.auth.uid;
+    }
+
+    // Suppressions Collection
+    match /suppressions/{suppressionId} {
+      allow get: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerified()
+        && isValidId(suppressionId)
+        && incoming().ownerId == request.auth.uid
+        && incoming().email is string && incoming().email.size() <= 254;
+      allow update: if isVerified()
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId;
+      allow delete: if isSignedIn() && existing().ownerId == request.auth.uid;
+    }
+
+    // Campaigns Collection
+    match /campaigns/{campaignId} {
+      allow get: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerified()
+        && isValidId(campaignId)
+        && incoming().ownerId == request.auth.uid
+        && incoming().name is string && incoming().name.size() <= 256
+        && incoming().subject is string && incoming().subject.size() <= 512
+        && incoming().body is string && incoming().body.size() <= 8192;
+      allow update: if isVerified()
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId
+        && incoming().name is string && incoming().name.size() <= 256
+        && incoming().subject is string && incoming().subject.size() <= 512
+        && incoming().body is string && incoming().body.size() <= 8192;
+      allow delete: if isSignedIn() && existing().ownerId == request.auth.uid;
+    }
+
+    // Campaign Leads Collection
+    match /campaign_leads/{campaignLeadId} {
+      allow get: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerified()
+        && isValidId(campaignLeadId)
+        && incoming().ownerId == request.auth.uid
+        && incoming().campaignId is string
+        && incoming().leadId is string;
+      allow update: if isVerified()
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId;
+      allow delete: if isSignedIn() && existing().ownerId == request.auth.uid;
+    }
+
+    // Email Messages Collection
+    match /email_messages/{messageId} {
+      allow get: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isVerified()
+        && isValidId(messageId)
+        && incoming().ownerId == request.auth.uid
+        && incoming().toEmail is string && incoming().toEmail.size() <= 254
+        && incoming().subject is string && incoming().subject.size() <= 512
+        && incoming().body is string && incoming().body.size() <= 8192;
+      allow update: if isVerified()
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId;
+      allow delete: if isSignedIn() && existing().ownerId == request.auth.uid;
+    }
+  }
+}
